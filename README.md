@@ -17,19 +17,19 @@ The implementation is fully **CLI-based** and uses:
 
 The tool satisfies the following requirements:
 
-**Identify and display the path taken by packets**
+**1.Identify and display the path taken by packets** : 
 The server traces packet movement switch-by-switch using SDN flow rules and returns the full path, which is displayed by the client.
 
-**Track flow rules**
+**2.Track flow rules** :
 During tracing, the server reads flow table entries and prints the matched rule (switch → output port) used for forwarding.
 
-**Identify forwarding path**
+**3.Identify forwarding path** :
 The tracing engine follows output ports from one switch to the next until the destination host is reached.
 
-**Display route**
+**4.Display route** :
 The client prints the final route in ordered format (e.g., `H1 → S1 → S2 → S3 → H2`).
 
-**Validate using tests**
+**5.Validate using tests** :
 Different source–destination inputs are executed to verify valid paths, missing flow rules, and loop detection.
 
 ---
