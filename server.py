@@ -1,25 +1,80 @@
 import socket
 import json
+import os
 
-#Topology
+from mininet.net import Mininet
+from mininet.node import OVSSwitch
+from mininet.link import TCLink
+from mininet.topo import Topo
+
+
+
+class SDNTopology(Topo):
+    def build(self):
+        h1 = self.addHost('h1')
+        h2 = self.addHost('h2')
+
+        s1 = self.addSwitch('s1')
+        s2 = self.addSwitch('s2')
+        s3 = self.addSwitch('s3')
+
+        self.addLink(h1, s1)
+        self.addLink(s1, s2)
+        self.addLink(s2, s3)
+        self.addLink(s3, h2)
+
+
+
+def start_network():
+    print("Cleaning previous Mininet state...")
+    os.system("mn -c")
+
+    topo = SDNTopology()
+
+    net = Mininet(
+        topo=topo,
+        controller=None,   
+        switch=OVSSwitch,
+        link=TCLink
+    )
+
+    net.start()
+
+    print("Mininet network started (standalone mode)")
+    return net
+
+
+
 topology = {
     "S1": {"1": "H1", "2": "S2"},
     "S2": {"1": "S1", "2": "S3"},
     "S3": {"1": "S2", "2": "H2"}
 }
 
-#Host Mapping
 host_to_switch = {
     "H1": "S1",
     "H2": "S3"
 }
 
-#Flow Table
 flows = {
     "S1": {"H2": 2},
     "S2": {"H2": 2},
     "S3": {"H2": 2}
 }
+
+
+
+def validate_with_mininet(net):
+    print("\nValidating using Mininet (ping)...")
+
+    h1 = net.get('h1')
+    h2 = net.get('h2')
+
+    result = h1.cmd('ping -c 1 ' + h2.IP())
+    print(result.strip())
+
+    return "0% packet loss" in result
+
 
 
 def trace_path(src, dst):
@@ -31,16 +86,15 @@ def trace_path(src, dst):
     visited = set()
 
     while True:
-
         if current in visited:
             return ["Loop detected"]
+
         visited.add(current)
 
         if dst not in flows[current]:
             return ["Path not found"]
 
         out_port = flows[current][dst]
-
         print(f"{current} → port {out_port}")
 
         next_node = topology[current][str(out_port)]
@@ -54,23 +108,43 @@ def trace_path(src, dst):
     return path
 
 
-#Server Setup
-server = socket.socket()
-server.bind(("localhost", 9999))
-server.listen(1)
 
-print("SDN Path Tracing Server Running...")
+def main():
+    net = start_network()
 
-while True:
-    client, addr = server.accept()
+    server = socket.socket()
+    server.bind(("localhost", 9999))
+    server.listen(5)
 
-    data = client.recv(1024).decode()
-    req = json.loads(data)
+    print("\nSDN Path Tracing Server Running with Mininet...\n")
 
-    src = req["src"]
-    dst = req["dst"]
+    try:
+        while True:
+            client, addr = server.accept()
 
-    path = trace_path(src, dst)
+            data = client.recv(1024).decode()
+            req = json.loads(data)
 
-    client.send(json.dumps(path).encode())
-    client.close()
+            src = req.get("src")
+            dst = req.get("dst")
+
+            if src not in host_to_switch or dst not in host_to_switch:
+                path = ["Invalid hosts"]
+            else:
+                if not validate_with_mininet(net):
+                    path = ["Path not found"]
+                else:
+                    path = trace_path(src, dst)
+
+            client.send(json.dumps(path).encode())
+            client.close()
+
+    except KeyboardInterrupt:
+        print("\nShutting down server...")
+        net.stop()
+        os.system("mn -c")
+        server.close()
+
+
+if __name__ == "__main__":
+    main()
