@@ -1,15 +1,32 @@
-# Path Tracing Tool (SDN-Based)
+# ⚡ SDN Path Tracing Tool (Mininet-Based)
 
 ## 📌 Overview
 
-This project implements a **Software Defined Networking (SDN) Path Tracing Tool** using a **Client–Server architecture**.
-The tool traces the **path taken by packets** by reading **flow rules** from switches and reconstructing the **forwarding path** hop-by-hop.
+This project implements a **Software Defined Networking (SDN) Path Tracing Tool** using a **Client–Server architecture**, enhanced with **real network emulation using Mininet**.
 
-The implementation is fully **CLI-based** and uses:
+The tool traces the **path taken by packets** by:
 
-* One **client file**
-* One **server file**
-* Socket-based communication
+* Reading **flow rules (logical simulation)**
+* Reconstructing the **forwarding path hop-by-hop**
+* Validating connectivity using a **real emulated network**
+
+The system is fully **CLI-based** and consists of:
+
+* 🖥️ One **client file**
+* 🧠 One **server file**
+* 🔌 Socket-based communication
+* 🌐 Real network emulation using Mininet
+
+---
+
+## 🚀 What Makes This Project Strong
+
+Unlike basic simulations, this project:
+
+* ✅ Uses **Mininet** to emulate a real network
+* ✅ Validates packet delivery using **ICMP (ping)**
+* ✅ Combines **theoretical SDN logic + practical network execution**
+* ✅ Implements a **client–server distributed system**
 
 ---
 
@@ -17,24 +34,50 @@ The implementation is fully **CLI-based** and uses:
 
 The tool satisfies the following requirements:
 
-**1. Identify and display the path taken by packets** : 
-The server traces packet movement switch-by-switch using SDN flow rules and returns the full path, which is displayed by the client.
+### 1. Identify and Display Packet Path
 
-**2. Track flow rules** :
-During tracing, the server reads flow table entries and prints the matched rule (switch → output port) used for forwarding.
-
-**3. Identify forwarding path** :
-The tracing engine follows output ports from one switch to the next until the destination host is reached.
-
-**4. Display route** :
-The client prints the final route in ordered format (e.g., `H1 → S1 → S2 → S3 → H2`).
-
-**5. Validate using tests** :
-Different source–destination inputs are executed to verify valid paths, missing flow rules, and loop detection.
+The server reconstructs the full forwarding path and sends it to the client.
 
 ---
 
-## 🏗️ Client–Server Architecture
+### 2. Track Flow Rules
+
+The system logs each forwarding decision:
+
+```
+S1 → port 2
+S2 → port 2
+S3 → port 2
+```
+
+---
+
+### 3. Identify Forwarding Path
+
+The tracer follows output ports across switches until the destination is reached.
+
+---
+
+### 4. Display Route
+
+The client prints the complete route:
+
+```
+H1 → S1 → S2 → S3 → H2
+```
+
+---
+
+### 5. Validate Using Real Network (Mininet)
+
+Before tracing, the system validates connectivity using:
+
+* ICMP ping between hosts
+* Ensures the path is actually reachable
+
+---
+
+## 🏗️ Architecture
 
 ```
 Client (CLI)
@@ -43,7 +86,8 @@ Client (CLI)
      ▼
 Server (Path Tracing Engine)
      │
-     ├── SDN Topology
+     ├── Mininet Network (Real Emulation)
+     ├── SDN Topology (Logical Model)
      ├── Flow Tables
      └── Path Tracer
      │
@@ -64,40 +108,19 @@ SDN-Path-Tracer/
 
 ---
 
-## ⚙️ Server Responsibilities
-
-The server performs:
-
-* Maintain SDN topology
-* Store switch flow tables
-* Track flow rules
-* Identify forwarding path
-* Detect loops
-* Return final route
-
----
-
-## 💻 Client Responsibilities
-
-The client performs:
-
-* Takes source host input
-* Takes destination host input
-* Sends request to server
-* Receives traced path
-* Displays final route
-
----
-
-## 🔎 SDN Topology Used
+## 🌐 Network Topology (Mininet)
 
 ```
 H1 ── S1 ── S2 ── S3 ── H2
 ```
 
+* Hosts: `H1`, `H2`
+* Switches: `S1`, `S2`, `S3`
+* Links: Linear chain topology
+
 ---
 
-## 📊 Flow Table
+## 📊 Flow Table (Logical Model)
 
 | Switch | Destination | Output Port |
 | ------ | ----------- | ----------- |
@@ -109,39 +132,68 @@ H1 ── S1 ── S2 ── S3 ── H2
 
 ## 🧠 Path Tracing Algorithm
 
-1. Start from source host switch
+1. Start from source host's switch
 2. Read matching flow rule
-3. Get output port
-4. Move to next switch
+3. Extract output port
+4. Move to next node
 5. Repeat until destination
-6. Return full path
+6. Detect loops if revisited
+7. Return full path
+
+---
+
+## ⚙️ How It Works
+
+### 🔹 Step 1 — Client Request
+
+User enters:
+
+```
+H1 → H2
+```
+
+---
+
+### 🔹 Step 2 — Server Processing
+
+1. Validate using Mininet (ping)
+2. Read flow rules
+3. Trace forwarding path
+4. Detect errors (loop / missing rule)
+
+---
+
+### 🔹 Step 3 — Response
+
+Client receives and displays:
+
+```
+H1 → S1 → S2 → S3 → H2
+```
 
 ---
 
 ## ▶️ How to Run
 
-### Step 1 — Start Server
+### ✅ Prerequisites
 
-Open Terminal 1:
+* Python 3
+* Mininet installed
 
-```
-python server.py
-```
+---
 
-Output:
+### Step 1 — Start Server (IMPORTANT)
 
-```
-SDN Path Tracing Server Running...
+```bash
+sudo python3 server.py
 ```
 
 ---
 
 ### Step 2 — Run Client
 
-Open Terminal 2:
-
-```
-python client.py
+```bash
+python3 client.py
 ```
 
 ---
@@ -151,16 +203,18 @@ python client.py
 ### Client Input
 
 ```
-SDN Path Tracing Client
 Enter Source Host: H1
 Enter Destination Host: H2
 ```
 
 ---
 
-### Server Output (Tracking Flow Rules)
+### Server Output
 
 ```
+Validating using Mininet (ping)...
+0% packet loss
+
 Tracking Flow Rules...
 S1 → port 2
 S2 → port 2
@@ -169,7 +223,7 @@ S3 → port 2
 
 ---
 
-### Client Output (Final Route)
+### Client Output
 
 ```
 Forwarding Path:
@@ -178,58 +232,30 @@ H1 → S1 → S2 → S3 → H2
 
 ---
 
-## 🔁 Working Flow
-
-1. Client sends source and destination
-2. Server receives request
-3. Server reads flow rules
-4. Server follows forwarding path
-5. Server constructs route
-6. Server returns path
-7. Client displays route
-
----
-
 ## ✅ Validation Tests
 
-### Test Case 1 — Valid Path
-
-Input:
+### ✔ Test Case 1 — Valid Path
 
 ```
-H1 → H2
-```
-
-Output:
-
-```
-H1 → S1 → S2 → S3 → H2
+Input:  H1 → H2
+Output: H1 → S1 → S2 → S3 → H2
 ```
 
 ---
 
-### Test Case 2 — Path Not Found
-
-Input:
+### ❌ Test Case 2 — Invalid Destination
 
 ```
-H1 → H3
-```
-
-Output:
-
-```
-Path not found
+Input:  H1 → H3
+Output: Path not found
 ```
 
 ---
 
-### Test Case 3 — Loop Detection
-
-If switches form a loop:
+### 🔁 Test Case 3 — Loop Detection
 
 ```
-Loop detected
+Output: Loop detected
 ```
 
 ---
@@ -238,13 +264,12 @@ Loop detected
 
 * Client–Server architecture
 * CLI-based interface
-* SDN path tracing
+* SDN path tracing logic
 * Flow rule tracking
-* Forwarding path identification
-* Route display
-* Validation tests
+* Forwarding path reconstruction
 * Loop detection
-* Minimal implementation
+* Real network validation using Mininet
+* Lightweight and modular design
 
 ---
 
@@ -253,14 +278,18 @@ Loop detected
 * Python
 * Socket Programming
 * JSON
-* CLI
+* Mininet (Network Emulation)
+* Open vSwitch (OVS)
 
 ---
 
-## 📌 Sample Final Output
+## 📌 Sample Output
 
 ```
 Tracing Path: H1 → H2
+
+Validating using Mininet (ping)...
+0% packet loss
 
 Tracking Flow Rules...
 S1 → port 2
@@ -275,4 +304,21 @@ H1 → S1 → S2 → S3 → H2
 
 ## 📖 Conclusion
 
-This project implements a **Client–Server based SDN Path Tracing Tool** that tracks **flow rules**, identifies the **forwarding path**, and displays the **route taken by packets**. The tool satisfies all specified requirements using a simple CLI-based implementation.
+This project implements a **hybrid SDN Path Tracing Tool** that combines:
+
+* 📊 Logical flow-based path computation
+* 🌐 Real network emulation using Mininet
+
+It demonstrates how **packet forwarding decisions** can be analyzed, validated, and visualized in a controlled SDN environment, making it a strong foundation for advanced networking and SDN-based systems.
+
+---
+
+## 🚀 Future Improvements
+
+* 🔄 Replace static flow tables with real switch flow extraction (`ovs-ofctl`)
+* 🌐 Add web-based visualization (graph view)
+* ⚡ Integrate SDN controller (Ryu)
+* 📊 Add latency and path metrics analysis
+* 🔍 Support dynamic topologies
+
+---
