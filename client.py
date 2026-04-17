@@ -3,23 +3,29 @@ import json
 
 print("SDN Path Tracing Client")
 
-src = input("Enter Source Host: ")
-dst = input("Enter Destination Host: ")
+src = input("Enter Source Host (H1/H2): ").strip().upper()
+dst = input("Enter Destination Host (H1/H2): ").strip().upper()
 
 client = socket.socket()
-client.connect(("localhost", 9999))
 
-request = {
-    "src": src,
-    "dst": dst
-}
+try:
+    client.connect(("localhost", 9999))
 
-client.send(json.dumps(request).encode())
+    request = {
+        "src": src,
+        "dst": dst
+    }
 
-response = client.recv(1024).decode()
-path = json.loads(response)
+    client.send(json.dumps(request).encode())
 
-print("\nForwarding Path:")
-print(" → ".join(path))
+    response = client.recv(1024).decode()
+    path = json.loads(response)
 
-client.close()
+    print("\nForwarding Path:")
+    print(" → ".join(path))
+
+except ConnectionRefusedError:
+    print("Server not running. Start server first.")
+
+finally:
+    client.close()
