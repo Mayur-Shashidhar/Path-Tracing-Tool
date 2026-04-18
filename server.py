@@ -8,15 +8,15 @@ from mininet.link import TCLink
 from mininet.topo import Topo
 
 
-
 class SDNTopology(Topo):
     def build(self):
         h1 = self.addHost('h1')
         h2 = self.addHost('h2')
 
-        s1 = self.addSwitch('s1')
-        s2 = self.addSwitch('s2')
-        s3 = self.addSwitch('s3')
+        
+        s1 = self.addSwitch('s1', failMode='standalone')
+        s2 = self.addSwitch('s2', failMode='standalone')
+        s3 = self.addSwitch('s3', failMode='standalone')
 
         self.addLink(h1, s1)
         self.addLink(s1, s2)
@@ -26,7 +26,7 @@ class SDNTopology(Topo):
 
 
 def start_network():
-    print("Cleaning previous Mininet state...")
+    print("🧹 Cleaning previous Mininet state...")
     os.system("mn -c")
 
     topo = SDNTopology()
@@ -35,10 +35,14 @@ def start_network():
         topo=topo,
         controller=None,   
         switch=OVSSwitch,
-        link=TCLink
+        link=TCLink,
+        autoSetMacs=True   
     )
 
     net.start()
+
+    print("Initializing network (pingAll)...")
+    net.pingAll()
 
     print("Mininet network started (standalone mode)")
     return net
