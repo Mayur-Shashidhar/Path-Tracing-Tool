@@ -8,7 +8,7 @@ The tool traces the **path taken by packets** by:
 
 * Reading **flow rules (logical simulation)**
 * Reconstructing the **forwarding path hop-by-hop**
-* Validating connectivity using a **real emulated network**
+* Validating connectivity using a **real emulated network (ICMP over Open vSwitch)**
 
 The system is fully **CLI-based** and consists of:
 
@@ -23,9 +23,10 @@ The system is fully **CLI-based** and consists of:
 
 Unlike basic simulations, this project:
 
-* ✅ Uses **Mininet** to emulate a real network
-* ✅ Validates packet delivery using **ICMP (ping)**
-* ✅ Combines **theoretical SDN logic + practical network execution**
+* ✅ Uses **Mininet + Open vSwitch (OVS)** for real network emulation
+* ✅ Performs **actual packet forwarding validation (ICMP ping)**
+* ✅ Runs switches in **standalone (learning) mode without a controller**
+* ✅ Combines **SDN logic + real network execution**
 * ✅ Implements a **client–server distributed system**
 
 ---
@@ -68,12 +69,13 @@ H1 → S1 → S2 → S3 → H2
 
 ---
 
-### 5. Validate Using Real Network (Mininet)
+### 5. Validate Using Real Network (Mininet + OVS)
 
 Before tracing, the system validates connectivity using:
 
-* ICMP ping between hosts
-* Ensures the path is actually reachable
+* ICMP ping between hosts (`h1 → h2`)
+* Open vSwitch in **standalone mode** (L2 learning switch behavior)
+* Ensures **actual packet delivery**, not just simulation
 
 ---
 
@@ -87,6 +89,7 @@ Client (CLI)
 Server (Path Tracing Engine)
      │
      ├── Mininet Network (Real Emulation)
+     │     └── OVS Switches (standalone mode)
      ├── SDN Topology (Logical Model)
      ├── Flow Tables
      └── Path Tracer
@@ -116,7 +119,8 @@ H1 ── S1 ── S2 ── S3 ── H2
 
 * Hosts: `H1`, `H2`
 * Switches: `S1`, `S2`, `S3`
-* Links: Linear chain topology
+* Switch Mode: **Standalone (learning switch)**
+* No external controller required
 
 ---
 
@@ -146,8 +150,6 @@ H1 ── S1 ── S2 ── S3 ── H2
 
 ### 🔹 Step 1 — Client Request
 
-User enters:
-
 ```
 H1 → H2
 ```
@@ -156,16 +158,16 @@ H1 → H2
 
 ### 🔹 Step 2 — Server Processing
 
-1. Validate using Mininet (ping)
-2. Read flow rules
-3. Trace forwarding path
-4. Detect errors (loop / missing rule)
+1. Initialize Mininet topology
+2. Run `pingAll()` to establish connectivity
+3. Validate using ICMP (`h1 → h2`)
+4. Read flow rules (logical model)
+5. Trace forwarding path
+6. Detect errors (loop / missing rule)
 
 ---
 
 ### 🔹 Step 3 — Response
-
-Client receives and displays:
 
 ```
 H1 → S1 → S2 → S3 → H2
@@ -268,7 +270,8 @@ Output: Loop detected
 * Flow rule tracking
 * Forwarding path reconstruction
 * Loop detection
-* Real network validation using Mininet
+* Real packet validation using Mininet
+* OVS standalone switching (no controller dependency)
 * Lightweight and modular design
 
 ---
@@ -309,7 +312,7 @@ This project implements a **hybrid SDN Path Tracing Tool** that combines:
 * 📊 Logical flow-based path computation
 * 🌐 Real network emulation using Mininet
 
-It demonstrates how **packet forwarding decisions** can be analyzed, validated, and visualized in a controlled SDN environment, making it a strong foundation for advanced networking and SDN-based systems.
+It demonstrates how **packet forwarding decisions** can be analyzed and validated using **actual network behavior**, making it a strong foundation for advanced SDN systems.
 
 ---
 
@@ -320,5 +323,3 @@ It demonstrates how **packet forwarding decisions** can be analyzed, validated, 
 * ⚡ Integrate SDN controller (Ryu)
 * 📊 Add latency and path metrics analysis
 * 🔍 Support dynamic topologies
-
----
