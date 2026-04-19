@@ -19,6 +19,13 @@ The system is fully **CLI-based** and consists of:
 
 ---
 
+## 📖 Course Information
+
+- Course Name : Computer Networks
+- Course Code : UE24CS252B
+
+---
+
 ## 🚀 What Makes This Project Strong
 
 Unlike basic simulations, this project:
